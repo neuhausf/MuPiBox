@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 
-#https://raw.githubusercontent.com/splitti/MuPiBox/main
+#https://raw.githubusercontent.com/neuhausf/MuPiBox/main
 
 if [ "$1" = "dev" ] || [ "$1" = "beta" ] || [ "$1" = "stable" ]; then
 	RELEASE="$1"
@@ -12,7 +12,7 @@ elif [ "$1" = "branch" ]; then
     echo "Error: Branch name is required when using branch install"
     exit 1
   fi
-  BRANCH_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/splitti/MuPiBox/branches/${BRANCH})
+  BRANCH_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" https://api.github.com/repos/neuhausf/MuPiBox/branches/${BRANCH})
   if [ "$BRANCH_EXISTS" != "200" ]; then
     echo "Error: Branch '${BRANCH}' does not exist on GitHub"
     exit 1
@@ -34,15 +34,15 @@ OS=$(grep -E '^(VERSION_CODENAME)=' /etc/os-release)  >&3 2>&3
 OS=${OS:17}  >&3 2>&3
 ARCH=$(uname -m) >&3 2>&3	
 
-wget -O /tmp/installation.jpg https://raw.githubusercontent.com/splitti/MuPiBox/main/media/images/installation.jpg >&3 2>&3
+wget -O /tmp/installation.jpg https://raw.githubusercontent.com/neuhausf/MuPiBox/main/media/images/installation.jpg >&3 2>&3
 /usr/bin/fbv /tmp/installation.jpg & >&3 2>&3
 
 if [ -z "$BRANCH" ]; then
-  wget -q -O ${VER_JSON} https://raw.githubusercontent.com/splitti/MuPiBox/main/version.json >&3 2>&3
+  wget -q -O ${VER_JSON} https://raw.githubusercontent.com/neuhausf/MuPiBox/main/version.json >&3 2>&3
   VERSION=$(/usr/bin/jq -r .release.${RELEASE}[-1].version ${VER_JSON})  >&3 2>&3
   MUPIBOX_URL=$(/usr/bin/jq -r .release.${RELEASE}[-1].url ${VER_JSON})  >&3 2>&3
 else
-  MUPIBOX_URL="https://github.com/splitti/MuPiBox/archive/refs/heads/${BRANCH}.zip"
+  MUPIBOX_URL="https://github.com/neuhausf/MuPiBox/archive/refs/heads/${BRANCH}.zip"
 fi
 
 USER=$(/usr/bin/whoami) >&3 2>&3
@@ -57,9 +57,9 @@ else
 fi
 
 if [ -n "$BRANCH" ]; then
-  VERSION_LONG="DEV ${BRANCH} $(curl -s 'https://api.github.com/repos/splitti/MuPiBox/branches/'"$BRANCH" | jq -r '.commit.commit.committer.date' | cut -d'T' -f1)" >&3 2>&3
+  VERSION_LONG="DEV ${BRANCH} $(curl -s 'https://api.github.com/repos/neuhausf/MuPiBox/branches/'"$BRANCH" | jq -r '.commit.commit.committer.date' | cut -d'T' -f1)" >&3 2>&3
 elif [ "$RELEASE" = "dev" ]; then
-	VERSION_LONG="DEV $(curl -s "https://api.github.com/repos/splitti/MuPiBox" | jq -r '.pushed_at' | cut -d'T' -f1)"  >&3 2>&3
+	VERSION_LONG="DEV $(curl -s "https://api.github.com/repos/neuhausf/MuPiBox" | jq -r '.pushed_at' | cut -d'T' -f1)"  >&3 2>&3
 else
 	VERSION_LONG="${VERSION} ${RELEASE}"
 fi
@@ -417,12 +417,12 @@ echo "==========================================================================
 	# Binaries
 	if [ `getconf LONG_BIT` == 32 ]; then
 		wget -O /usr/bin/jq https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-armhf >&3 2>&3
-		wget -O /usr/bin/librespot https://github.com/splitti/MuPiBox/raw/refs/heads/main/bin/librespot/dev_0.6_20250806/librespot-32bit >&3 2>&3
+		wget -O /usr/bin/librespot https://github.com/neuhausf/MuPiBox/raw/refs/heads/main/bin/librespot/dev_0.6_20250806/librespot-32bit >&3 2>&3
 		#mv ${MUPI_SRC}/bin/librespot/dev_0.6_20250305/librespot-32bit /usr/bin/librespot >&3 2>&3
 		mv ${MUPI_SRC}/bin/fbv/fbv /usr/bin/fbv >&3 2>&3
 	else
 		wget -O /usr/bin/jq https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-arm64 >&3 2>&3
-		wget -O /usr/bin/librespot https://github.com/splitti/MuPiBox/raw/refs/heads/main/bin/librespot/dev_0.6_20250806/librespot-64bit >&3 2>&3
+		wget -O /usr/bin/librespot https://github.com/neuhausf/MuPiBox/raw/refs/heads/main/bin/librespot/dev_0.6_20250806/librespot-64bit >&3 2>&3
 		#mv ${MUPI_SRC}/bin/librespot/dev_0.6_20250305/librespot-64bit /usr/bin/librespot >&3 2>&3
 		mv ${MUPI_SRC}/bin/fbv/fbv_64 /usr/bin/fbv >&3 2>&3
 	fi
