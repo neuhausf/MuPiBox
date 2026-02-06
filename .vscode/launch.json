@@ -1,9 +1,7 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+    
     {
       "name": "Launch: backend-api",
       "program": "${workspaceFolder}/src/backend-api/src/server.ts",
@@ -48,7 +46,7 @@
       "name": "Launch: Chrome",
       "request": "launch",
       "type": "chrome",
-      "url": "http://localhost:4200",
+      "url": "http://127.0.0.1:4200",
       "webRoot": "${workspaceFolder}/src/frontend-box"
     }
   ]

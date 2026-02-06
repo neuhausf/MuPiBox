@@ -1,6 +1,6 @@
 {
   "files.insertFinalNewline": true,
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "editor.defaultFormatter": "biomejs.biome",
   "editor.guides.bracketPairs": "active",
   "editor.guides.bracketPairsHorizontal": "active",

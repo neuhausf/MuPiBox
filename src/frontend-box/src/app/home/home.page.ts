@@ -19,6 +19,7 @@ import {
   musicalNotesOutline,
   radioOutline,
   timerOutline,
+  videocamOutline,
 } from 'ionicons/icons'
 import { catchError, combineLatest, map, of, switchMap, tap } from 'rxjs'
 
@@ -66,7 +67,7 @@ export class HomePage extends SwiperIonicEventsHelper {
     private router: Router,
   ) {
     super()
-    addIcons({ timerOutline, bookOutline, musicalNotesOutline, radioOutline, cloudOutline, cloudOfflineOutline })
+    addIcons({ timerOutline, bookOutline, musicalNotesOutline, radioOutline, cloudOutline, cloudOfflineOutline, videocamOutline })
 
     this.isOnline = toSignal(this.mediaService.isOnline())
 

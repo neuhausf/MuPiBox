@@ -77,84 +77,175 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="player-content">
+<ion-content class="player-content" [class.fullscreen]="isFullscreen">
   <ion-grid>
     <ion-row>
-      <ion-col size="6">
-        <ion-card class="cover-card">
-          <img src="{{this.cover}} " draggable="false" style="-moz-user-select: none;" ondragstart="return false;">
-        </ion-card>
-      </ion-col>
+      <!-- Video Player Bereich (nur für Videos) -->
+      @if (isVideoMode) {
+        <ion-col size="12" class="video-container">
+          <video 
+            #videoPlayer
+            [src]="videoUrl"
+            controls
+            autoplay
+            (timeupdate)="onVideoTimeUpdate($event)"
+            (ended)="onVideoEnded()"
+            (play)="onVideoPlay()"
+            (pause)="onVideoPause()"
+            (volumechange)="onVolumeChange($event)">
+            Ihr Browser unterstützt das Video-Tag nicht.
+          </video>
+          <ion-button 
+            class="fullscreen-toggle" 
+            (click)="toggleFullscreen()" 
+            color="light"
+            fill="clear">
+            <ion-icon slot="icon-only" [name]="isFullscreen ? 'contract-outline' : 'expand-outline'"></ion-icon>
+          </ion-button>
+        </ion-col>
+      }
+      
+      <!-- Bestehender Audio-Player Bereich (nur für Audio) -->
+      @if (!isVideoMode) {
+        <ion-col size="6">
+          <ion-card class="cover-card">
+            <img src="{{this.cover}}" draggable="false" style="-moz-user-select: none;" ondragstart="return false;">
+          </ion-card>
+        </ion-col>
 
-      <ion-col size="6">
-        <ion-grid class="controls">
-          <ion-row class="slider-row">
-            @if (media.type !=='radio') {
-              <ion-range #range [(ngModel)]="progress" max="100" (touchend)="seek()" (mouseup)="seek()"></ion-range>
+        <ion-col size="6">
+          <ion-grid class="controls">
+            <ion-row class="slider-row">
+              @if (media.type !=='radio') {
+                <ion-range #range [(ngModel)]="progress" max="100" (touchend)="seek()" (mouseup)="seek()"></ion-range>
+              }
+            </ion-row>
+            <ion-row class="controls-row">
+              <ion-col size="4" class="ion-text-center">
+                <ion-button (click)="volDown()" color="light">
+                  <ion-icon slot="icon-only" name="volume-low-outline" class="small-icon"></ion-icon>
+                </ion-button>
+              </ion-col>
+              <ion-col size="4" class="ion-text-center">
+                <ion-button (click)="playPause()" color="light">
+                  @if (playing) {
+                    <ion-icon slot="icon-only" name="pause" class="small-icon"></ion-icon>
+                  }
+                  @if (!playing) {
+                    <ion-icon slot="icon-only" name="play" class="small-icon"></ion-icon>
+                  }
+                </ion-button>
+              </ion-col>
+              <ion-col size="4" class="ion-text-center">
+                <ion-button (click)="volUp()" color="light">
+                  <ion-icon slot="icon-only" name="volume-high-outline" class="small-icon"></ion-icon>
+                </ion-button>
+              </ion-col>
+            </ion-row>
+
+            <ion-row class="controls-row">
+              <ion-col size="6" class="ion-text-center">
+                <ion-button [disabled]="this.media.showid" (click)="skipPrev()" color="light">
+                  <ion-icon slot="icon-only" name="play-skip-back" class="small-icon"></ion-icon>
+                </ion-button>
+              </ion-col>
+              <ion-col size="6" class="ion-text-center">
+                <ion-button [disabled]="this.media.showid" (click)="skipNext()" color="light">
+                  <ion-icon slot="icon-only" name="play-skip-forward" class="small-icon"></ion-icon>
+                </ion-button>
+              </ion-col>
+            </ion-row>
+
+            @if (media.type ==='spotify' && (media.category =='music' || media.category =='other')) {
+              <ion-row class="controls-row">
+                <ion-col size="4" class="ion-text-center">
+                  <ion-button (click)="seekBack()" color="light">
+                    <ion-icon slot="icon-only" name="play-back" class="small-icon"></ion-icon>
+                  </ion-button>
+                </ion-col>
+                <ion-col size="4" class="ion-text-center">
+                  @if (!media.shuffle) {
+                    <ion-button (click)="toggleshuffle()" color="light">
+                      <ion-icon slot="icon-only" name="shuffle-outline" class="small-icon"></ion-icon>
+                    </ion-button>
+                  }
+                  @if (media.shuffle) {
+                    <ion-button (click)="toggleshuffle()" color="dark">
+                      <ion-icon slot="icon-only" name="shuffle-outline" class="small-icon"></ion-icon>
+                    </ion-button>
+                  }
+                </ion-col>
+                <ion-col size="4" class="ion-text-center">
+                  <ion-button (click)="seekForward()" color="light">
+                    <ion-icon slot="icon-only" name="play-forward" class="small-icon"></ion-icon>
+                  </ion-button>
+                </ion-col>
+              </ion-row>
+            } @else {
+              <ion-row class="controls-row">
+                <ion-col size="6" class="ion-text-center">
+                  <ion-button (click)="seekBack()" color="light">
+                    <ion-icon slot="icon-only" name="play-back" class="small-icon"></ion-icon>
+                  </ion-button>
+                </ion-col>
+                <ion-col size="6" class="ion-text-center">
+                  <ion-button (click)="seekForward()" color="light">
+                    <ion-icon slot="icon-only" name="play-forward" class="small-icon"></ion-icon>
+                  </ion-button>
+                </ion-col>
+              </ion-row>
             }
-          </ion-row>
-          <ion-row class="controls-row">
-            <ion-col size="4" class="ion-text-center">
-              <ion-button (click)="volDown()" color="light">
-                <ion-icon slot="icon-only" name="volume-low-outline" class="small-icon"></ion-icon>
-              </ion-button>
-            </ion-col>
-            <ion-col size="4" class="ion-text-center">
-              <ion-button (click)="playPause()" color="light">
-                @if (playing) {
-                  <ion-icon slot="icon-only" name="pause" class="small-icon"></ion-icon>
-                }
-                @if (!playing) {
-                  <ion-icon slot="icon-only" name="play" class="small-icon"></ion-icon>
-                }
-              </ion-button>
-            </ion-col>
-            <ion-col size="4" class="ion-text-center">
-              <ion-button (click)="volUp()" color="light">
-                <ion-icon slot="icon-only" name="volume-high-outline" class="small-icon"></ion-icon>
-              </ion-button>
-            </ion-col>
-          </ion-row>
-
-          <ion-row class="controls-row">
-            <ion-col size="6" class="ion-text-center">
-              <ion-button [disabled]="this.media.showid" (click)="skipPrev()" color="light">
-                <ion-icon slot="icon-only" name="play-skip-back" class="small-icon"></ion-icon>
-              </ion-button>
-            </ion-col>
-            <ion-col size="6" class="ion-text-center">
-              <ion-button [disabled]="this.media.showid" (click)="skipNext()" color="light">
-                <ion-icon slot="icon-only" name="play-skip-forward" class="small-icon"></ion-icon>
-              </ion-button>
-            </ion-col>
-          </ion-row>
-
-          @if (media.type ==='spotify' && (media.category =='music' || media.category =='other')) {
+          </ion-grid>
+        </ion-col>
+      }
+      
+      <!-- Controls für Video (unterhalb des Videos) -->
+      @if (isVideoMode) {
+        <ion-col size="12">
+          <ion-grid class="controls video-controls">
+            <ion-row class="slider-row">
+              <ion-range #range [(ngModel)]="progress" max="100" (touchend)="seek()" (mouseup)="seek()"></ion-range>
+            </ion-row>
+            <ion-row class="time-display">
+              <ion-col size="6" class="ion-text-start">
+                <span class="time-label">{{formatTime(currentVideoTime)}}</span>
+              </ion-col>
+              <ion-col size="6" class="ion-text-end">
+                <span class="time-label">{{formatTime(videoDuration)}}</span>
+              </ion-col>
+            </ion-row>
             <ion-row class="controls-row">
-              <ion-col size="4" class="ion-text-center">
-                <ion-button (click)="seekBack()" color="light">
-                  <ion-icon slot="icon-only" name="play-back" class="small-icon"></ion-icon>
+              <ion-col size="3" class="ion-text-center">
+                <ion-button (click)="volDown()" color="light">
+                  <ion-icon slot="icon-only" name="volume-low-outline" class="small-icon"></ion-icon>
                 </ion-button>
               </ion-col>
-              <ion-col size="4" class="ion-text-center">
-                @if (!media.shuffle) {
-                  <ion-button (click)="toggleshuffle()" color="light">
-                    <ion-icon slot="icon-only" name="shuffle-outline" class="small-icon"></ion-icon>
-                  </ion-button>
-                }
-                @if (media.shuffle) {
-                  <ion-button (click)="toggleshuffle()" color="dark">
-                    <ion-icon slot="icon-only" name="shuffle-outline" class="small-icon"></ion-icon>
-                  </ion-button>
-                }
+              <ion-col size="2" class="ion-text-center">
+                <ion-button (click)="skipPrev()" color="light">
+                  <ion-icon slot="icon-only" name="play-skip-back" class="small-icon"></ion-icon>
+                </ion-button>
               </ion-col>
-              <ion-col size="4" class="ion-text-center">
-                <ion-button (click)="seekForward()" color="light">
-                  <ion-icon slot="icon-only" name="play-forward" class="small-icon"></ion-icon>
+              <ion-col size="2" class="ion-text-center">
+                <ion-button (click)="playPause()" color="light">
+                  @if (playing) {
+                    <ion-icon slot="icon-only" name="pause" class="small-icon"></ion-icon>
+                  }
+                  @if (!playing) {
+                    <ion-icon slot="icon-only" name="play" class="small-icon"></ion-icon>
+                  }
+                </ion-button>
+              </ion-col>
+              <ion-col size="2" class="ion-text-center">
+                <ion-button (click)="skipNext()" color="light">
+                  <ion-icon slot="icon-only" name="play-skip-forward" class="small-icon"></ion-icon>
+                </ion-button>
+              </ion-col>
+              <ion-col size="3" class="ion-text-center">
+                <ion-button (click)="volUp()" color="light">
+                  <ion-icon slot="icon-only" name="volume-high-outline" class="small-icon"></ion-icon>
                 </ion-button>
               </ion-col>
             </ion-row>
-          } @else {
             <ion-row class="controls-row">
               <ion-col size="6" class="ion-text-center">
                 <ion-button (click)="seekBack()" color="light">
@@ -167,9 +258,9 @@
                 </ion-button>
               </ion-col>
             </ion-row>
-          }
-        </ion-grid>
-      </ion-col>
+          </ion-grid>
+        </ion-col>
+      }
     </ion-row>
   </ion-grid>
 </ion-content>

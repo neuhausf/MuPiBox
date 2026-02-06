@@ -5,7 +5,7 @@ export enum MediaSorting {
   ReleaseDateDescending = 'ReleaseDateDescending',
 }
 
-export type CategoryType = 'audiobook' | 'music' | 'other' | 'resume'
+export type CategoryType = 'audiobook' | 'music' | 'other' | 'resume' | 'video'
 
 export interface Media {
   index?: number

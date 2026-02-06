@@ -19,16 +19,17 @@ export class RssFeedService {
   getRssFeed(id: string, category: CategoryType, index: number, extraDataSource: ExtraDataMedia): Observable<Media[]> {
     this.url = `${environment.backend.apiUrl}/rssfeed?url=${id}`
     return this.http.get(this.url).pipe(
-      map((response: RssFeed) => {
-        return response.rss.channel.item.map((item) => {
-          console.log(item)
+      map((response: any): Media[] => {
+        const items = response.rss?.channel?.item || response.feed?.entry || []
+        return items.map((item) => {
+          // console.log(item)
           const media: Media = {
             id: item.enclosure?._attributes?.url,
-            artist: this.handleCData(response.rss?.channel?.title),
+            artist: this.handleCData(response.rss?.channel?.title || response.feed?.title),
             title: this.handleCData(item?.title),
             cover: item['itunes:image']?._attributes?.href,
-            artistcover: this.handleCData(response.rss?.channel?.image?.url),
-            release_date: this.handleCData(item?.pubDate),
+            artistcover: this.handleCData(response.rss?.channel?.image?.url || response.feed?.logo),
+            release_date: this.handleCData(item?.pubDate || item?.published),
             duration: this.handleCData(item?.['itunes:duration']),
             type: 'rss',
             category,
@@ -38,8 +39,6 @@ export class RssFeedService {
           return media
         })
       }),
-      mergeAll(),
-      toArray(),
     )
   }
 

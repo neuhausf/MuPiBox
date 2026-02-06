@@ -77,8 +77,8 @@ export class MedialistPage extends SwiperIonicEventsHelper {
           }
 
           const isShow =
-            (artist.coverMedia.showid && artist.coverMedia.showid.length > 0) ||
-            (artist.coverMedia.type === 'rss' && artist.coverMedia.id.length > 0)
+            (artist.coverMedia?.showid && artist.coverMedia?.showid?.length > 0) ||
+            (artist.coverMedia?.type === 'rss' && artist.coverMedia?.id?.length > 0)
 
           return this.mediaService.fetchMediaFromArtist(artist, category).pipe(
             catchError((error) => {

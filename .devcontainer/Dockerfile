@@ -14,12 +14,20 @@ RUN apt-get update \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
-# Install chrome.
-RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb --no-check-certificate \
-    && apt-get update \
-    && apt-get install -y ./google-chrome-stable_current_amd64.deb \
-    && apt --fix-broken install \
-    && rm -f google-chrome-stable_current_amd64.deb \
+# Install chrome (architecture-aware).
+RUN ARCH=$(dpkg --print-architecture) \
+    && if [ "$ARCH" = "amd64" ]; then \
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb --no-check-certificate -O chrome.deb; \
+    elif [ "$ARCH" = "arm64" ]; then \
+        echo "Chrome not available for ARM64, installing Chromium instead"; \
+        apt-get update && apt-get install -y chromium-browser; \
+    fi \
+    && if [ -f chrome.deb ]; then \
+        apt-get update \
+        && apt-get install -y ./chrome.deb \
+        && apt --fix-broken install \
+        && rm -f chrome.deb; \
+    fi \
     && apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*

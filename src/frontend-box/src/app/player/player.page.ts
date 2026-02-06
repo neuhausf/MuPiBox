@@ -1,5 +1,5 @@
 import { AsyncPipe } from '@angular/common'
-import { Component, OnInit, ViewChild } from '@angular/core'
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core'
 import { FormsModule } from '@angular/forms'
 import { ActivatedRoute, Router } from '@angular/router'
 import {
@@ -30,6 +30,8 @@ import {
   shuffleOutline,
   volumeHighOutline,
   volumeLowOutline,
+  expandOutline,
+  contractOutline,
 } from 'ionicons/icons'
 import type { Observable } from 'rxjs'
 import type { AlbumStop } from '../albumstop'
@@ -67,6 +69,7 @@ import { SpotifyService } from '../spotify.service'
 })
 export class PlayerPage implements OnInit {
   @ViewChild('range', { static: false }) range: IonRange
+  @ViewChild('videoPlayer', { static: false }) videoPlayer: ElementRef<HTMLVideoElement>
 
   media: Media
   resumemedia: Media
@@ -88,6 +91,14 @@ export class PlayerPage implements OnInit {
   tmpProgressTime = 0
   public readonly spotify$: Observable<CurrentSpotify>
   public readonly local$: Observable<CurrentMPlayer>
+
+  // Video-spezifische Properties
+  isVideoMode = false
+  videoUrl = ''
+  isFullscreen = false
+  currentVideoTime = 0
+  videoDuration = 0
+  private fullscreenChangeHandler: () => void
 
   constructor(
     private logService: LogService,
@@ -121,7 +132,14 @@ export class PlayerPage implements OnInit {
       playBack,
       shuffleOutline,
       playForward,
+      expandOutline,
+      contractOutline,
     })
+
+    // Fullscreen Event Listener
+    this.fullscreenChangeHandler = () => {
+      this.isFullscreen = !!document.fullscreenElement
+    }
   }
 
   ngOnInit() {
@@ -129,6 +147,9 @@ export class PlayerPage implements OnInit {
     if (!this.media) {
       this.handleExternalPlayback()
     }
+
+    // Video-Modus erkennen
+    this.detectVideoMode()
 
     this.mediaService.current$.subscribe((spotify) => {
       this.currentPlayedSpotify = spotify
@@ -149,6 +170,43 @@ export class PlayerPage implements OnInit {
     this.mediaService.albumStop$.subscribe((albumStop) => {
       this.albumStop = albumStop
     })
+
+    // Fullscreen Event Listener registrieren
+    document.addEventListener('fullscreenchange', this.fullscreenChangeHandler)
+    document.addEventListener('webkitfullscreenchange', this.fullscreenChangeHandler)
+    document.addEventListener('mozfullscreenchange', this.fullscreenChangeHandler)
+    document.addEventListener('msfullscreenchange', this.fullscreenChangeHandler)
+  }
+
+  ngOnDestroy() {
+    // Cleanup Fullscreen Event Listeners
+    document.removeEventListener('fullscreenchange', this.fullscreenChangeHandler)
+    document.removeEventListener('webkitfullscreenchange', this.fullscreenChangeHandler)
+    document.removeEventListener('mozfullscreenchange', this.fullscreenChangeHandler)
+    document.removeEventListener('msfullscreenchange', this.fullscreenChangeHandler)
+  }
+
+  private detectVideoMode(): void {
+    // Prüfen ob Media-Objekt Video-Content enthält
+    if (this.media) {
+      // Verschiedene Möglichkeiten wie Video-Content markiert sein könnte
+      this.isVideoMode = 
+        this.media.type === 'video' || 
+        this.media.category === 'video' ||
+        (this.media as any).isVideo === true ||
+        (this.media as any).videoUrl !== undefined
+
+      if (this.isVideoMode) {
+        // Video-URL aus verschiedenen möglichen Quellen extrahieren
+        this.videoUrl = (this.media as any).videoUrl || 
+                       (this.media as any).url || 
+                       (this.media as any).streamUrl || 
+                        this.media.id ||
+                       ''
+        
+        this.logService.log('[PlayerPage] Video mode detected, URL:', this.videoUrl)
+      }
+    }
   }
 
   private handleExternalPlayback(): void {
@@ -179,13 +237,99 @@ export class PlayerPage implements OnInit {
     }
   }
 
+  // Video-spezifische Event-Handler
+  onVideoTimeUpdate(event: Event): void {
+    if (this.videoPlayer?.nativeElement) {
+      const video = this.videoPlayer.nativeElement
+      this.currentVideoTime = video.currentTime
+      this.videoDuration = video.duration
+      
+      if (this.videoDuration > 0) {
+        this.progress = (this.currentVideoTime / this.videoDuration) * 100
+      }
+    }
+  }
+
+  onVideoEnded(): void {
+    this.logService.log('[PlayerPage] Video ended')
+    // Optional: Automatisch zum nächsten Video springen
+    this.skipNext()
+  }
+
+  onVideoPlay(): void {
+    this.playing = true
+    this.logService.log('[PlayerPage] Video play event')
+  }
+
+  onVideoPause(): void {
+    this.playing = false
+    this.logService.log('[PlayerPage] Video pause event')
+  }
+
+  onVolumeChange(event: Event): void {
+    if (this.videoPlayer?.nativeElement) {
+      const video = this.videoPlayer.nativeElement
+      this.logService.log('[PlayerPage] Video volume changed to:', video.volume)
+    }
+  }
+
+  toggleFullscreen(): void {
+    if (this.videoPlayer?.nativeElement) {
+      const video = this.videoPlayer.nativeElement
+      
+      if (!document.fullscreenElement) {
+        // Enter fullscreen
+        if (video.requestFullscreen) {
+          video.requestFullscreen()
+        } else if ((video as any).webkitRequestFullscreen) {
+          (video as any).webkitRequestFullscreen()
+        } else if ((video as any).mozRequestFullScreen) {
+          (video as any).mozRequestFullScreen()
+        } else if ((video as any).msRequestFullscreen) {
+          (video as any).msRequestFullscreen()
+        }
+      } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          document.exitFullscreen()
+        } else if ((document as any).webkitExitFullscreen) {
+          (document as any).webkitExitFullscreen()
+        } else if ((document as any).mozCancelFullScreen) {
+          (document as any).mozCancelFullScreen()
+        } else if ((document as any).msExitFullscreen) {
+          (document as any).msExitFullscreen()
+        }
+      }
+    }
+  }
+
+  formatTime(seconds: number): string {
+    if (!seconds || isNaN(seconds)) {
+      return '0:00'
+    }
+    const minutes = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${minutes}:${secs.toString().padStart(2, '0')}`
+  }
+
   seek() {
     const newValue = +this.range.value
-    if (this.media.type === 'spotify') {
-      const duration = this.currentPlayedSpotify?.item.duration_ms
-      this.playerService.seekPosition(duration * (newValue / 100))
-    } else if (this.media.type === 'library' || this.media.type === 'rss') {
-      this.playerService.seekPosition(newValue)
+    
+    if (this.isVideoMode && this.videoPlayer?.nativeElement) {
+      // Video-Seek über HTML5 Video API
+      const video = this.videoPlayer.nativeElement
+      if (video.duration > 0) {
+        video.currentTime = (video.duration * newValue) / 100
+        this.logService.log('[PlayerPage] Video seek to:', video.currentTime)
+      }
+    } else {
+      // Bestehende Audio-Seek-Logik
+      if (this.media.type === 'spotify') {
+        const duration = this.currentPlayedSpotify?.item.duration_ms
+        this.playerService.seekPosition(duration * (newValue / 100))
+      } else if (this.media.type === 'library' || this.media.type === 'rss') {
+        this.playerService.seekPosition(newValue)
+      }
     }
   }
 
@@ -197,6 +341,19 @@ export class PlayerPage implements OnInit {
       this.currentPlayedLocal = local
     })
 
+    // Für Video wird der Progress über onVideoTimeUpdate aktualisiert
+    if (this.isVideoMode) {
+      this.playing = this.videoPlayer?.nativeElement ? !this.videoPlayer.nativeElement.paused : false
+      
+      setTimeout(() => {
+        if (this.updateProgression) {
+          this.updateProgress()
+        }
+      }, 1000)
+      return
+    }
+
+    // Bestehende Audio-Progress-Logik
     this.playing = !this.currentPlayedLocal?.pause
     if (this.playing) {
       this.resumeTimer++
@@ -251,8 +408,14 @@ export class PlayerPage implements OnInit {
 
   async ionViewWillEnter() {
     this.updateProgression = true
-    if (this.resumePlay) {
+    
+    if (this.isVideoMode) {
+      // Für Video-Modus: Nur URL setzen, autoplay übernimmt den Rest
+      this.logService.log('[PlayerPage] Entering video mode')
+      this.updateProgress()
+    } else if (this.resumePlay) {
       await this.resumePlayback()
+      this.updateProgress()
     } else if (!this.isExternalPlayback) {
       // Only start playback if this is not external playback (already playing)
       const success = await this.playerService.playMedia(this.media)
@@ -264,11 +427,12 @@ export class PlayerPage implements OnInit {
         this.navController.back()
         return
       }
+      this.updateProgress()
+    } else {
+      this.updateProgress()
     }
 
-    this.updateProgress()
-
-    if (this.media?.shuffle && !this.isExternalPlayback) {
+    if (this.media?.shuffle && !this.isExternalPlayback && !this.isVideoMode) {
       setTimeout(() => {
         this.playerService.sendCmd(PlayerCmds.SHUFFLEON)
         setTimeout(() => {
@@ -279,27 +443,41 @@ export class PlayerPage implements OnInit {
   }
 
   ionViewWillLeave() {
-    if (
-      (this.media.type === 'spotify' || this.media.type === 'library' || this.media.type === 'rss') &&
-      !this.media.shuffle &&
-      this.resumeTimer > 30 &&
-      this.playing
-    ) {
-      this.saveResumeFiles()
+    if (this.isVideoMode) {
+      // Video stoppen
+      if (this.videoPlayer?.nativeElement) {
+        this.videoPlayer.nativeElement.pause()
+      }
+      // Fullscreen beenden falls aktiv
+      if (this.isFullscreen) {
+        this.toggleFullscreen()
+      }
+    } else {
+      // Bestehende Audio-Logik
+      if (
+        (this.media.type === 'spotify' || this.media.type === 'library' || this.media.type === 'rss') &&
+        !this.media.shuffle &&
+        this.resumeTimer > 30 &&
+        this.playing
+      ) {
+        this.saveResumeFiles()
+      }
+      this.playerService.sendCmd(PlayerCmds.STOP)
+      if (this.media.shuffle || this.shufflechanged) {
+        this.playerService.sendCmd(PlayerCmds.SHUFFLEOFF)
+      }
+      if (this.albumStop?.albumStop === 'On') {
+        this.playerService.sendCmd(PlayerCmds.ALBUMSTOP)
+      }
     }
+    
     this.updateProgression = false
-    if (this.media.shuffle || this.shufflechanged) {
-      this.playerService.sendCmd(PlayerCmds.SHUFFLEOFF)
-    }
-    this.playerService.sendCmd(PlayerCmds.STOP)
     this.resumePlay = false
+    
     if (this.media.type === 'spotify' && (this.media.category === 'music' || this.media.category === 'other')) {
       if (this.shufflechanged % 2 === 1) {
         this.mediaService.editRawMediaAtIndex(this.media.index, this.media)
       }
-    }
-    if (this.albumStop?.albumStop === 'On') {
-      this.playerService.sendCmd(PlayerCmds.ALBUMSTOP)
     }
   }
 
@@ -391,28 +569,52 @@ export class PlayerPage implements OnInit {
   }
 
   volUp() {
-    this.playerService.sendCmd(PlayerCmds.VOLUMEUP)
+    if (this.isVideoMode && this.videoPlayer?.nativeElement) {
+      const video = this.videoPlayer.nativeElement
+      video.volume = Math.min(1, video.volume + 0.1)
+      this.logService.log('[PlayerPage] Video volume up to:', video.volume)
+    } else {
+      this.playerService.sendCmd(PlayerCmds.VOLUMEUP)
+    }
   }
 
   volDown() {
-    this.playerService.sendCmd(PlayerCmds.VOLUMEDOWN)
+    if (this.isVideoMode && this.videoPlayer?.nativeElement) {
+      const video = this.videoPlayer.nativeElement
+      video.volume = Math.max(0, video.volume - 0.1)
+      this.logService.log('[PlayerPage] Video volume down to:', video.volume)
+    } else {
+      this.playerService.sendCmd(PlayerCmds.VOLUMEDOWN)
+    }
   }
 
   skipPrev() {
-    if (this.playing) {
-      this.playerService.sendCmd(PlayerCmds.PREVIOUS)
+    if (this.isVideoMode) {
+      // Video-spezifische Previous-Logik
+      // Hier könnte eine Playlist-Logik implementiert werden
+      this.logService.log('[PlayerPage] Video skip previous - not implemented')
     } else {
-      this.playing = true
-      this.playerService.sendCmd(PlayerCmds.PREVIOUS)
+      if (this.playing) {
+        this.playerService.sendCmd(PlayerCmds.PREVIOUS)
+      } else {
+        this.playing = true
+        this.playerService.sendCmd(PlayerCmds.PREVIOUS)
+      }
     }
   }
 
   skipNext() {
-    if (this.playing) {
-      this.playerService.sendCmd(PlayerCmds.NEXT)
+    if (this.isVideoMode) {
+      // Video-spezifische Next-Logik
+      // Hier könnte eine Playlist-Logik implementiert werden
+      this.logService.log('[PlayerPage] Video skip next - not implemented')
     } else {
-      this.playing = true
-      this.playerService.sendCmd(PlayerCmds.NEXT)
+      if (this.playing) {
+        this.playerService.sendCmd(PlayerCmds.NEXT)
+      } else {
+        this.playing = true
+        this.playerService.sendCmd(PlayerCmds.NEXT)
+      }
     }
   }
 
@@ -429,23 +631,46 @@ export class PlayerPage implements OnInit {
   }
 
   playPause() {
-    if (this.playing) {
-      //this.playing = false;
-      this.playerService.sendCmd(PlayerCmds.PAUSE)
-      if (this.media.type === 'spotify' || this.media.type === 'library' || this.media.type === 'rss') {
-        this.saveResumeFiles()
+    if (this.isVideoMode && this.videoPlayer?.nativeElement) {
+      // Video-Steuerung über HTML5 Video API
+      const video = this.videoPlayer.nativeElement
+      if (this.playing) {
+        video.pause()
+        this.logService.log('[PlayerPage] Video paused')
+      } else {
+        video.play()
+        this.logService.log('[PlayerPage] Video playing')
       }
     } else {
-      //this.playing = true;
-      this.playerService.sendCmd(PlayerCmds.PLAY)
+      // Bestehende Audio-Steuerung
+      if (this.playing) {
+        this.playerService.sendCmd(PlayerCmds.PAUSE)
+        if (this.media.type === 'spotify' || this.media.type === 'library' || this.media.type === 'rss') {
+          this.saveResumeFiles()
+        }
+      } else {
+        this.playerService.sendCmd(PlayerCmds.PLAY)
+      }
     }
   }
 
   seekForward() {
-    this.playerService.sendCmd(PlayerCmds.SEEKFORWARD)
+    if (this.isVideoMode && this.videoPlayer?.nativeElement) {
+      const video = this.videoPlayer.nativeElement
+      video.currentTime = Math.min(video.duration, video.currentTime + 10)
+      this.logService.log('[PlayerPage] Video seek forward to:', video.currentTime)
+    } else {
+      this.playerService.sendCmd(PlayerCmds.SEEKFORWARD)
+    }
   }
 
   seekBack() {
-    this.playerService.sendCmd(PlayerCmds.SEEKBACK)
+    if (this.isVideoMode && this.videoPlayer?.nativeElement) {
+      const video = this.videoPlayer.nativeElement
+      video.currentTime = Math.max(0, video.currentTime - 10)
+      this.logService.log('[PlayerPage] Video seek back to:', video.currentTime)
+    } else {
+      this.playerService.sendCmd(PlayerCmds.SEEKBACK)
+    }
   }
 }

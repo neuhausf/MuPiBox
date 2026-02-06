@@ -49,7 +49,7 @@ readJsonFile(`${configBasePath}/config.json`).then((configFile) => {
     console.warn('No Spotify configuration found, Spotify API service will not be available')
   }
 })
-const mupiboxConfigPath = '/etc/mupibox/mupiboxconfig.json'
+const mupiboxConfigPath = `${configBasePath}/mupiboxconfig.json`
 const dataFile = `${configBasePath}/data.json`
 const resumeFile = `${configBasePath}/resume.json`
 const activedataFile = `${configBasePath}/active_data.json`
@@ -94,8 +94,9 @@ app.get('/api/rssfeed', async (req, res) => {
     .text()
     .then((response) => {
       res.send(xmlparser.xml2json(response, { compact: true, nativeType: true }))
-    })
-    .catch(() => {
+    })  
+    .catch((error) => {
+      console.log(`${nowDate.toLocaleString()}: [MuPiBox-Server] Error /api/rssfeed: ${error}`)
       res.status(500).send('External url responded with error code.')
     })
 })
@@ -158,7 +159,28 @@ app.get('/api/activeresume', (_req, res) => {
   }
 })
 
-app.get('/api/network', (_req, res) => {
+app.get('/api/network', (req, res) => {
+  const ip = req.socket.remoteAddress
+  const host = req.hostname
+  const isLocalhost =
+    ip === '127.0.0.1' || ip === '::ffff:127.0.0.1' || ip === '::1' || host.indexOf('localhost') !== -1
+
+  if (isLocalhost) {
+    res.json({
+      onlinestate: 'online',
+      host: 'MuPiBox',
+      ip: '127.0.0.1',
+      mac: 'd8:3a:dd:b3:d1:87',
+      wifi: 'CoolWifiName',
+      wifilink: '55%',
+      wifisignal: '-71 dBm',
+      gateway: '192.168.1.1',
+      dns: '192.168.1.1 1.1.1.1 9.9.9.9',
+      subnet: '255.255.255.0',
+    })
+    return
+  }
+
   if (fs.existsSync(networkFile)) {
     tryReadFile(networkFile)
       .then((data) => {
