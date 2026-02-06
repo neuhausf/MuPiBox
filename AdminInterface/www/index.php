@@ -1,6 +1,6 @@
 	<?php
 			include ('includes/header.php');
-			$onlinejson = file_get_contents('https://raw.githubusercontent.com/splitti/MuPiBox/main/version.json');
+			$onlinejson = file_get_contents('https://raw.githubusercontent.com/neuhausf/MuPiBox/main/version.json');
 			$dataonline = json_decode($onlinejson, true);
 
 			exec("sudo rm /var/www/images/screenshot.png /val/www/images/temp.png /var/www/images/cpuload.png");
@@ -78,7 +78,7 @@
 							<tr>
 									<td>Development</td>
 									<td><?php
-											exec("echo $(sudo curl -s 'https://api.github.com/repos/splitti/MuPiBox' | jq -r '.pushed_at' | cut -d'T' -f1)", $devversion, $rc);
+											exec("echo $(sudo curl -s 'https://api.github.com/repos/neuhausf/MuPiBox' | jq -r '.pushed_at' | cut -d'T' -f1)", $devversion, $rc);
 											print "DEV " . $devversion[0];
 										?>
 									</td>
@@ -87,7 +87,7 @@
 							</tr>
 						</table></p>
 				<?php
-					$news = file_get_contents("https://raw.githubusercontent.com/splitti/MuPiBox/main/news.txt");
+					$news = file_get_contents("https://raw.githubusercontent.com/neuhausf/MuPiBox/main/news.txt");
 					print "<p><h2>MuPiBox-News</h2>".$news."</p>"; ?>
 				</li>
 			</ul>

@@ -1,5 +1,5 @@
 <?php
-	$onlinejson = file_get_contents('https://raw.githubusercontent.com/splitti/MuPiBox/main/config/templates/mupiboxconfig.json');
+	$onlinejson = file_get_contents('https://raw.githubusercontent.com/neuhausf/MuPiBox/main/config/templates/mupiboxconfig.json');
 	$dataonline = json_decode($onlinejson, true);
 	include ('includes/header.php');
 
@@ -32,7 +32,7 @@
 		
 	if( $_POST['change_samba'] == "enable & start" )
 		{
-		$command = "sudo apt-get install samba -y && sudo wget https://raw.githubusercontent.com/splitti/MuPiBox/main/config/templates/smb.conf -O /etc/samba/smb.conf && sudo systemctl enable smbd.service && sudo systemctl start smbd.service";
+		$command = "sudo apt-get install samba -y && sudo wget https://raw.githubusercontent.com/neuhausf/MuPiBox/main/config/templates/smb.conf -O /etc/samba/smb.conf && sudo systemctl enable smbd.service && sudo systemctl start smbd.service";
 		exec($command, $output, $result );
 		$change=1;
 		$CHANGE_TXT=$CHANGE_TXT."<li>Samba enabled</li>";
@@ -47,7 +47,7 @@
 
 	if( $_POST['change_ftp'] == "enable & start" )
 		{
-		$command = " sudo apt-get install proftpd -y && sudo apt-get install samba -y && sudo wget https://raw.githubusercontent.com/splitti/MuPiBox/main/config/templates/proftpd.conf -O /etc/proftpd/proftpd.conf && sudo systemctl restart proftpd";
+		$command = " sudo apt-get install proftpd -y && sudo apt-get install samba -y && sudo wget https://raw.githubusercontent.com/neuhausf/MuPiBox/main/config/templates/proftpd.conf -O /etc/proftpd/proftpd.conf && sudo systemctl restart proftpd";
 		exec($command, $output, $result );
 		$change=1;
 		$CHANGE_TXT=$CHANGE_TXT."<li>FTP enabled</li>";

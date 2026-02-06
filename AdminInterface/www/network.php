@@ -19,7 +19,7 @@
 
 	if( $_POST['RTL88X2BU'] == "Install driver" )
 		{
-		$command = "cd; curl -L https://raw.githubusercontent.com/splitti/MuPiBox/main/scripts/online/install_rtl88x2bu.sh | sudo su dietpi -c bash";
+		$command = "cd; curl -L https://raw.githubusercontent.com/neuhausf/MuPiBox/main/scripts/online/install_rtl88x2bu.sh | sudo su dietpi -c bash";
 		exec($command, $output, $result );
 
 		$change=1;
@@ -34,7 +34,7 @@
 		}
 	if( $_POST['RTL88X2BU'] == "Remove driver" )
 		{
-		$command = "cd; curl -L https://raw.githubusercontent.com/splitti/MuPiBox/main/scripts/online/remove_rtl88x2bu.sh | sudo su dietpi -c bash";
+		$command = "cd; curl -L https://raw.githubusercontent.com/neuhausf/MuPiBox/main/scripts/online/remove_rtl88x2bu.sh | sudo su dietpi -c bash";
 		exec($command, $output, $result );
 
 		$change=1;
@@ -84,7 +84,7 @@
 		
 	if( $_POST['change_samba'] == "enable & start" )
 		{
-		$command = "sudo apt-get install samba wsdd -y && sudo wget https://raw.githubusercontent.com/splitti/MuPiBox/main/config/templates/smb.conf -O /etc/samba/smb.conf && sudo systemctl enable smbd.service && sudo systemctl start smbd.service && (echo 'mupibox'; echo 'mupibox') | sudo smbpasswd -s -a 'dietpi'";
+		$command = "sudo apt-get install samba wsdd -y && sudo wget https://raw.githubusercontent.com/neuhausf/MuPiBox/main/config/templates/smb.conf -O /etc/samba/smb.conf && sudo systemctl enable smbd.service && sudo systemctl start smbd.service && (echo 'mupibox'; echo 'mupibox') | sudo smbpasswd -s -a 'dietpi'";
 		exec($command, $output, $result );
 		$change=1;
 		$CHANGE_TXT=$CHANGE_TXT."<li>Samba enabled</li>";
@@ -130,7 +130,7 @@
 
 	if( $_POST['change_ftp'] == "enable & start" )
 		{
-		$command = " sudo apt-get install proftpd -y && sudo apt-get install samba -y && sudo wget https://raw.githubusercontent.com/splitti/MuPiBox/main/config/templates/proftpd.conf -O /etc/proftpd/proftpd.conf && sudo systemctl restart proftpd";
+		$command = " sudo apt-get install proftpd -y && sudo apt-get install samba -y && sudo wget https://raw.githubusercontent.com/neuhausf/MuPiBox/main/config/templates/proftpd.conf -O /etc/proftpd/proftpd.conf && sudo systemctl restart proftpd";
 		exec($command, $output, $result );
 		$change=1;
 		$CHANGE_TXT=$CHANGE_TXT."<li>FTP enabled</li>";

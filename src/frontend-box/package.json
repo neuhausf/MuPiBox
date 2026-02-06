@@ -2,7 +2,7 @@
   "name": "mupibox-frontend-box",
   "version": "1.0.0",
   "author": "Mupi Team",
-  "homepage": "https://github.com/splitti/mupibox",
+  "homepage": "https://github.com/neuhausf/mupibox",
   "scripts": {
     "ng": "ng",
     "serve": "ng serve --host 0.0.0.0",

@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Script for MuPiBox Autosetup
-# Start with: cd; curl https://raw.githubusercontent.com/splitti/MuPiBox/main/autosetup/autosetup-stable.sh | bash
+# Start with: cd; curl https://raw.githubusercontent.com/neuhausf/MuPiBox/main/autosetup/autosetup-stable.sh | bash
 
 #exec {tracefd}>/home/dietpi/.mupibox/autosetup.log; BASH_XTRACEFD=$tracefd; PS4=':$LINENO+'; set -x
 
@@ -105,7 +105,7 @@ exec 3>${LOG}
 
 	echo -e "XXX\n${STEP}\nPrepare MuPiBox Download ... \nXXX"	
 	before=$(date +%s)
-	wget -q -O ${VER_JSON} https://raw.githubusercontent.com/splitti/MuPiBox/main/version.json  >&3 2>&3
+	wget -q -O ${VER_JSON} https://raw.githubusercontent.com/neuhausf/MuPiBox/main/version.json  >&3 2>&3
 
 	VERSION=$(/usr/bin/jq -r .release.${RELEASE}[-1].version ${VER_JSON})  >&3 2>&3
 	MUPIBOX_URL=$(/usr/bin/jq -r .release.${RELEASE}[-1].url ${VER_JSON})  >&3 2>&3
@@ -185,7 +185,7 @@ exec 3>${LOG}
 	#echo -e "XXX\n${STEP}\nInstall Pi-Blaster... \nXXX"	
 	#before=$(date +%s)
 	#sudo rm -R /home/dietpi/pi-blaster >&3 2>&3
-	#sudo su dietpi -c 'cd /home/dietpi/; git clone https://github.com/splitti/pi-blaster.git' >&3 2>&3
+	#sudo su dietpi -c 'cd /home/dietpi/; git clone https://github.com/neuhausf/pi-blaster.git' >&3 2>&3
 	#after=$(date +%s)
 	#echo -e "## Install Pi-Blaster  ##  finished after $((after - $before)) seconds" >&3 2>&3
 	#STEP=$(($STEP + 1))
