@@ -108,11 +108,37 @@
     .controls-row {
         margin-top: 8px;
 
-        ion-button {
+        ion-button.control-button {
+            --background: #ffcf5a;
+            --background-activated: #f7b733;
+            --background-hover: #ffd77a;
+            --color: #1a1a1a;
+            --border-radius: 999px;
+            --box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
             --padding-start: 20px;
             --padding-end: 20px;
             --padding-top: 15px;
             --padding-bottom: 15px;
+            transform: translateY(0);
+            transition: transform 0.12s ease, filter 0.12s ease;
+        }
+
+        ion-button.control-button:active {
+            transform: translateY(1px) scale(0.98);
+            filter: brightness(0.96);
+        }
+
+        ion-button.play-button {
+            --background: #6ee7ff;
+            --background-activated: #53d4ff;
+            --background-hover: #8bf0ff;
+            --color: #0b1b2b;
+            --box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+            transform: translateY(-2px);
+        }
+
+        ion-button.play-button .small-icon {
+            font-size: 34px !important;
         }
     }
 }
