@@ -108,7 +108,17 @@ export class MedialistPage extends SwiperIonicEventsHelper {
         media: clickedMedia,
       },
     }
-    this.router.navigate(['/player'], navigationExtras)
+    
+    // Bestimme ob es sich um Video oder Audio handelt
+    const isVideo = 
+      clickedMedia.type === 'video' || 
+      clickedMedia.category === 'video' ||
+      (clickedMedia as any).isVideo === true ||
+      (clickedMedia as any).videoUrl !== undefined
+
+    // Navigiere zu entsprechender Route
+    const route = isVideo ? '/video-player' : '/player'
+    this.router.navigate([route], navigationExtras)
   }
 
   private sortMedia(coverMedia: Media, media: Media[], defaultSorting: MediaSorting): Media[] {

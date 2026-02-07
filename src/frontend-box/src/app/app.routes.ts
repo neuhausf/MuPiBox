@@ -23,6 +23,10 @@ export const routes: Routes = [
     loadComponent: () => import('./player/player.page').then((m) => m.PlayerPage),
   },
   {
+    path: 'video-player',
+    loadComponent: () => import('./player/video-player.page').then((m) => m.VideoPlayerPage),
+  },
+  {
     path: 'edit',
     loadComponent: () => import('./edit/edit.page').then((m) => m.EditPage),
   },

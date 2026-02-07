@@ -30,8 +30,6 @@ import {
   shuffleOutline,
   volumeHighOutline,
   volumeLowOutline,
-  expandOutline,
-  contractOutline,
 } from 'ionicons/icons'
 import type { Observable } from 'rxjs'
 import type { AlbumStop } from '../albumstop'
@@ -69,7 +67,6 @@ import { SpotifyService } from '../spotify.service'
 })
 export class PlayerPage implements OnInit {
   @ViewChild('range', { static: false }) range: IonRange
-  @ViewChild('videoPlayer', { static: false }) videoPlayer: ElementRef<HTMLVideoElement>
 
   media: Media
   resumemedia: Media
@@ -91,16 +88,6 @@ export class PlayerPage implements OnInit {
   tmpProgressTime = 0
   public readonly spotify$: Observable<CurrentSpotify>
   public readonly local$: Observable<CurrentMPlayer>
-
-  // Video-spezifische Properties
-  isVideoMode = false
-  videoUrl = ''
-  isFullscreen = false
-  currentVideoTime = 0
-  videoDuration = 0
-  showVideoControls = false
-  private videoControlsTimeout: any
-  private fullscreenChangeHandler: () => void
 
   constructor(
     private logService: LogService,
@@ -134,14 +121,7 @@ export class PlayerPage implements OnInit {
       playBack,
       shuffleOutline,
       playForward,
-      expandOutline,
-      contractOutline,
     })
-
-    // Fullscreen Event Listener
-    this.fullscreenChangeHandler = () => {
-      this.isFullscreen = !!document.fullscreenElement
-    }
   }
 
   ngOnInit() {
@@ -149,9 +129,6 @@ export class PlayerPage implements OnInit {
     if (!this.media) {
       this.handleExternalPlayback()
     }
-
-    // Video-Modus erkennen
-    this.detectVideoMode()
 
     this.mediaService.current$.subscribe((spotify) => {
       this.currentPlayedSpotify = spotify
@@ -172,43 +149,6 @@ export class PlayerPage implements OnInit {
     this.mediaService.albumStop$.subscribe((albumStop) => {
       this.albumStop = albumStop
     })
-
-    // Fullscreen Event Listener registrieren
-    document.addEventListener('fullscreenchange', this.fullscreenChangeHandler)
-    document.addEventListener('webkitfullscreenchange', this.fullscreenChangeHandler)
-    document.addEventListener('mozfullscreenchange', this.fullscreenChangeHandler)
-    document.addEventListener('msfullscreenchange', this.fullscreenChangeHandler)
-  }
-
-  ngOnDestroy() {
-    // Cleanup Fullscreen Event Listeners
-    document.removeEventListener('fullscreenchange', this.fullscreenChangeHandler)
-    document.removeEventListener('webkitfullscreenchange', this.fullscreenChangeHandler)
-    document.removeEventListener('mozfullscreenchange', this.fullscreenChangeHandler)
-    document.removeEventListener('msfullscreenchange', this.fullscreenChangeHandler)
-  }
-
-  private detectVideoMode(): void {
-    // Prüfen ob Media-Objekt Video-Content enthält
-    if (this.media) {
-      // Verschiedene Möglichkeiten wie Video-Content markiert sein könnte
-      this.isVideoMode = 
-        this.media.type === 'video' || 
-        this.media.category === 'video' ||
-        (this.media as any).isVideo === true ||
-        (this.media as any).videoUrl !== undefined
-
-      if (this.isVideoMode) {
-        // Video-URL aus verschiedenen möglichen Quellen extrahieren
-        this.videoUrl = (this.media as any).videoUrl || 
-                       (this.media as any).url || 
-                       (this.media as any).streamUrl || 
-                        this.media.id ||
-                       ''
-        
-        this.logService.log('[PlayerPage] Video mode detected, URL:', this.videoUrl)
-      }
-    }
   }
 
   private handleExternalPlayback(): void {
@@ -239,122 +179,15 @@ export class PlayerPage implements OnInit {
     }
   }
 
-  // Video-spezifische Event-Handler
-  onVideoTimeUpdate(event: Event): void {
-    if (this.videoPlayer?.nativeElement) {
-      const video = this.videoPlayer.nativeElement
-      this.currentVideoTime = video.currentTime
-      this.videoDuration = video.duration
-      
-      if (this.videoDuration > 0) {
-        this.progress = (this.currentVideoTime / this.videoDuration) * 100
-      }
-    }
-  }
-
-  onVideoEnded(): void {
-    this.logService.log('[PlayerPage] Video ended')
-    // Optional: Automatisch zum nächsten Video springen
-    this.skipNext()
-  }
-
-  onVideoLoadedMetadata(event: Event): void {
-    const video = event.target as HTMLVideoElement
-    this.videoDuration = video.duration
-    this.logService.log('[PlayerPage] Video metadata loaded, duration:', this.videoDuration)
-  }
-
-  onVideoPlay(): void {
-    this.playing = true
-    this.logService.log('[PlayerPage] Video play event')
-  }
-
-  onVideoPause(): void {
-    this.playing = false
-    this.logService.log('[PlayerPage] Video pause event')
-  }
-
-  onVolumeChange(event: Event): void {
-    if (this.videoPlayer?.nativeElement) {
-      const video = this.videoPlayer.nativeElement
-      this.logService.log('[PlayerPage] Video volume changed to:', video.volume)
-    }
-  }
-
-  toggleFullscreen(): void {
-    if (this.videoPlayer?.nativeElement) {
-      const video = this.videoPlayer.nativeElement
-      
-      if (!document.fullscreenElement) {
-        // Enter fullscreen
-        if (video.requestFullscreen) {
-          video.requestFullscreen()
-        } else if ((video as any).webkitRequestFullscreen) {
-          (video as any).webkitRequestFullscreen()
-        } else if ((video as any).mozRequestFullScreen) {
-          (video as any).mozRequestFullScreen()
-        } else if ((video as any).msRequestFullscreen) {
-          (video as any).msRequestFullscreen()
-        }
-      } else {
-        // Exit fullscreen
-        if (document.exitFullscreen) {
-          document.exitFullscreen()
-        } else if ((document as any).webkitExitFullscreen) {
-          (document as any).webkitExitFullscreen()
-        } else if ((document as any).mozCancelFullScreen) {
-          (document as any).mozCancelFullScreen()
-        } else if ((document as any).msExitFullscreen) {
-          (document as any).msExitFullscreen()
-        }
-      }
-    }
-  }
-
-  formatTime(seconds: number): string {
-    if (!seconds || isNaN(seconds)) {
-      return '0:00'
-    }
-    const minutes = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${minutes}:${secs.toString().padStart(2, '0')}`
-  }
-
-  toggleVideoControls(): void {
-    if (this.isVideoMode) {
-      this.showVideoControls = !this.showVideoControls
-      this.logService.log('[PlayerPage] Video controls toggled:', this.showVideoControls)
-      
-      // Auto-hide nach 5 Sekunden
-      if (this.showVideoControls) {
-        if (this.videoControlsTimeout) {
-          clearTimeout(this.videoControlsTimeout)
-        }
-        this.videoControlsTimeout = setTimeout(() => {
-          this.showVideoControls = false
-        }, 5000)
-      }
-    }
-  }
-
   seek() {
     const newValue = +this.range.value
     
-    if (this.isVideoMode && this.videoPlayer?.nativeElement) {
-      // Video-Seek über HTML5 Video API
-      const video = this.videoPlayer.nativeElement
-      if (video.duration > 0) {
-        video.currentTime = (video.duration * newValue) / 100
-        this.logService.log('[PlayerPage] Video seek to:', video.currentTime)
-      }
-    } else {
-      // Bestehende Audio-Seek-Logik
-      if (this.media.type === 'spotify') {
-        const duration = this.currentPlayedSpotify?.item.duration_ms
-        this.playerService.seekPosition(duration * (newValue / 100))
-      } else if (this.media.type === 'library' || this.media.type === 'rss') {
-        this.playerService.seekPosition(newValue)
-      }
+    // Bestehende Audio-Seek-Logik
+    if (this.media.type === 'spotify') {
+      const duration = this.currentPlayedSpotify?.item.duration_ms
+      this.playerService.seekPosition(duration * (newValue / 100))
+    } else if (this.media.type === 'library' || this.media.type === 'rss') {
+      this.playerService.seekPosition(newValue)
     }
   }
 
@@ -365,18 +198,6 @@ export class PlayerPage implements OnInit {
     this.mediaService.local$.subscribe((local) => {
       this.currentPlayedLocal = local
     })
-
-    // Für Video wird der Progress über onVideoTimeUpdate aktualisiert
-    if (this.isVideoMode) {
-      this.playing = this.videoPlayer?.nativeElement ? !this.videoPlayer.nativeElement.paused : false
-      
-      setTimeout(() => {
-        if (this.updateProgression) {
-          this.updateProgress()
-        }
-      }, 1000)
-      return
-    }
 
     // Bestehende Audio-Progress-Logik
     this.playing = !this.currentPlayedLocal?.pause
@@ -434,11 +255,7 @@ export class PlayerPage implements OnInit {
   async ionViewWillEnter() {
     this.updateProgression = true
     
-    if (this.isVideoMode) {
-      // Für Video-Modus: Nur URL setzen, autoplay übernimmt den Rest
-      this.logService.log('[PlayerPage] Entering video mode')
-      this.updateProgress()
-    } else if (this.resumePlay) {
+    if (this.resumePlay) {
       await this.resumePlayback()
       this.updateProgress()
     } else if (!this.isExternalPlayback) {
@@ -457,7 +274,7 @@ export class PlayerPage implements OnInit {
       this.updateProgress()
     }
 
-    if (this.media?.shuffle && !this.isExternalPlayback && !this.isVideoMode) {
+    if (this.media?.shuffle && !this.isExternalPlayback) {
       setTimeout(() => {
         this.playerService.sendCmd(PlayerCmds.SHUFFLEON)
         setTimeout(() => {
@@ -468,32 +285,20 @@ export class PlayerPage implements OnInit {
   }
 
   ionViewWillLeave() {
-    if (this.isVideoMode) {
-      // Video stoppen
-      if (this.videoPlayer?.nativeElement) {
-        this.videoPlayer.nativeElement.pause()
-      }
-      // Fullscreen beenden falls aktiv
-      if (this.isFullscreen) {
-        this.toggleFullscreen()
-      }
-    } else {
-      // Bestehende Audio-Logik
-      if (
-        (this.media.type === 'spotify' || this.media.type === 'library' || this.media.type === 'rss') &&
-        !this.media.shuffle &&
-        this.resumeTimer > 30 &&
-        this.playing
-      ) {
-        this.saveResumeFiles()
-      }
-      this.playerService.sendCmd(PlayerCmds.STOP)
-      if (this.media.shuffle || this.shufflechanged) {
-        this.playerService.sendCmd(PlayerCmds.SHUFFLEOFF)
-      }
-      if (this.albumStop?.albumStop === 'On') {
-        this.playerService.sendCmd(PlayerCmds.ALBUMSTOP)
-      }
+    if (
+      (this.media.type === 'spotify' || this.media.type === 'library' || this.media.type === 'rss') &&
+      !this.media.shuffle &&
+      this.resumeTimer > 30 &&
+      this.playing
+    ) {
+      this.saveResumeFiles()
+    }
+    this.playerService.sendCmd(PlayerCmds.STOP)
+    if (this.media.shuffle || this.shufflechanged) {
+      this.playerService.sendCmd(PlayerCmds.SHUFFLEOFF)
+    }
+    if (this.albumStop?.albumStop === 'On') {
+      this.playerService.sendCmd(PlayerCmds.ALBUMSTOP)
     }
     
     this.updateProgression = false
@@ -594,52 +399,28 @@ export class PlayerPage implements OnInit {
   }
 
   volUp() {
-    if (this.isVideoMode && this.videoPlayer?.nativeElement) {
-      const video = this.videoPlayer.nativeElement
-      video.volume = Math.min(1, video.volume + 0.1)
-      this.logService.log('[PlayerPage] Video volume up to:', video.volume)
-    } else {
-      this.playerService.sendCmd(PlayerCmds.VOLUMEUP)
-    }
+    this.playerService.sendCmd(PlayerCmds.VOLUMEUP)
   }
 
   volDown() {
-    if (this.isVideoMode && this.videoPlayer?.nativeElement) {
-      const video = this.videoPlayer.nativeElement
-      video.volume = Math.max(0, video.volume - 0.1)
-      this.logService.log('[PlayerPage] Video volume down to:', video.volume)
-    } else {
-      this.playerService.sendCmd(PlayerCmds.VOLUMEDOWN)
-    }
+    this.playerService.sendCmd(PlayerCmds.VOLUMEDOWN)
   }
 
   skipPrev() {
-    if (this.isVideoMode) {
-      // Video-spezifische Previous-Logik
-      // Hier könnte eine Playlist-Logik implementiert werden
-      this.logService.log('[PlayerPage] Video skip previous - not implemented')
+    if (this.playing) {
+      this.playerService.sendCmd(PlayerCmds.PREVIOUS)
     } else {
-      if (this.playing) {
-        this.playerService.sendCmd(PlayerCmds.PREVIOUS)
-      } else {
-        this.playing = true
-        this.playerService.sendCmd(PlayerCmds.PREVIOUS)
-      }
+      this.playing = true
+      this.playerService.sendCmd(PlayerCmds.PREVIOUS)
     }
   }
 
   skipNext() {
-    if (this.isVideoMode) {
-      // Video-spezifische Next-Logik
-      // Hier könnte eine Playlist-Logik implementiert werden
-      this.logService.log('[PlayerPage] Video skip next - not implemented')
+    if (this.playing) {
+      this.playerService.sendCmd(PlayerCmds.NEXT)
     } else {
-      if (this.playing) {
-        this.playerService.sendCmd(PlayerCmds.NEXT)
-      } else {
-        this.playing = true
-        this.playerService.sendCmd(PlayerCmds.NEXT)
-      }
+      this.playing = true
+      this.playerService.sendCmd(PlayerCmds.NEXT)
     }
   }
 
@@ -656,46 +437,21 @@ export class PlayerPage implements OnInit {
   }
 
   playPause() {
-    if (this.isVideoMode && this.videoPlayer?.nativeElement) {
-      // Video-Steuerung über HTML5 Video API
-      const video = this.videoPlayer.nativeElement
-      if (this.playing) {
-        video.pause()
-        this.logService.log('[PlayerPage] Video paused')
-      } else {
-        video.play()
-        this.logService.log('[PlayerPage] Video playing')
+    if (this.playing) {
+      this.playerService.sendCmd(PlayerCmds.PAUSE)
+      if (this.media.type === 'spotify' || this.media.type === 'library' || this.media.type === 'rss') {
+        this.saveResumeFiles()
       }
     } else {
-      // Bestehende Audio-Steuerung
-      if (this.playing) {
-        this.playerService.sendCmd(PlayerCmds.PAUSE)
-        if (this.media.type === 'spotify' || this.media.type === 'library' || this.media.type === 'rss') {
-          this.saveResumeFiles()
-        }
-      } else {
-        this.playerService.sendCmd(PlayerCmds.PLAY)
-      }
+      this.playerService.sendCmd(PlayerCmds.PLAY)
     }
   }
 
   seekForward() {
-    if (this.isVideoMode && this.videoPlayer?.nativeElement) {
-      const video = this.videoPlayer.nativeElement
-      video.currentTime = Math.min(video.duration, video.currentTime + 10)
-      this.logService.log('[PlayerPage] Video seek forward to:', video.currentTime)
-    } else {
-      this.playerService.sendCmd(PlayerCmds.SEEKFORWARD)
-    }
+    this.playerService.sendCmd(PlayerCmds.SEEKFORWARD)
   }
 
   seekBack() {
-    if (this.isVideoMode && this.videoPlayer?.nativeElement) {
-      const video = this.videoPlayer.nativeElement
-      video.currentTime = Math.max(0, video.currentTime - 10)
-      this.logService.log('[PlayerPage] Video seek back to:', video.currentTime)
-    } else {
-      this.playerService.sendCmd(PlayerCmds.SEEKBACK)
-    }
+    this.playerService.sendCmd(PlayerCmds.SEEKBACK)
   }
 }
