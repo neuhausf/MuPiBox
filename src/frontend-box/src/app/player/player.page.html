@@ -82,26 +82,79 @@
     <ion-row>
       <!-- Video Player Bereich (nur für Videos) -->
       @if (isVideoMode) {
-        <ion-col size="12" class="video-container">
+        <ion-col size="12" class="video-container" (click)="toggleVideoControls()">
           <video 
             #videoPlayer
             [src]="videoUrl"
-            controls
             autoplay
             (timeupdate)="onVideoTimeUpdate($event)"
             (ended)="onVideoEnded()"
             (play)="onVideoPlay()"
             (pause)="onVideoPause()"
+            (loadedmetadata)="onVideoLoadedMetadata($event)"
             (volumechange)="onVolumeChange($event)">
             Ihr Browser unterstützt das Video-Tag nicht.
           </video>
-          <ion-button 
-            class="fullscreen-toggle" 
-            (click)="toggleFullscreen()" 
-            color="light"
-            fill="clear">
-            <ion-icon slot="icon-only" [name]="isFullscreen ? 'contract-outline' : 'expand-outline'"></ion-icon>
-          </ion-button>
+          
+          @if (showVideoControls) {
+            <!-- Fullscreen Toggle -->
+            <ion-button 
+              class="fullscreen-toggle" 
+              (click)="toggleFullscreen(); $event.stopPropagation()" 
+              color="light"
+              fill="clear">
+              <ion-icon slot="icon-only" [name]="isFullscreen ? 'contract-outline' : 'expand-outline'"></ion-icon>
+            </ion-button>
+            
+            <!-- Video Controls Overlay -->
+            <div class="video-controls-overlay" (click)="$event.stopPropagation()">
+              <ion-grid class="controls video-controls">
+                <ion-row class="slider-row">
+                  <ion-range #range [(ngModel)]="progress" max="100" (touchend)="seek()" (mouseup)="seek()"></ion-range>
+                </ion-row>
+                <ion-row class="time-display">
+                  <ion-col size="6" class="ion-text-start">
+                    <span class="time-label">{{formatTime(currentVideoTime)}}</span>
+                  </ion-col>
+                  <ion-col size="6" class="ion-text-end">
+                    <span class="time-label">{{formatTime(videoDuration)}}</span>
+                  </ion-col>
+                </ion-row>
+                <ion-row class="controls-row">
+                  <ion-col size="3" class="ion-text-center">
+                    <ion-button (click)="volDown()" color="light">
+                      <ion-icon slot="icon-only" name="volume-low-outline" class="small-icon"></ion-icon>
+                    </ion-button>
+                  </ion-col>
+                  <ion-col size="2" class="ion-text-center">
+                    <ion-button (click)="skipPrev()" color="light">
+                      <ion-icon slot="icon-only" name="play-skip-back" class="small-icon"></ion-icon>
+                    </ion-button>
+                  </ion-col>
+                  <ion-col size="2" class="ion-text-center">
+                    <ion-button (click)="playPause()" color="light">
+                      @if (playing) {
+                        <ion-icon slot="icon-only" name="pause" class="small-icon"></ion-icon>
+                      }
+                      @if (!playing) {
+                        <ion-icon slot="icon-only" name="play" class="small-icon"></ion-icon>
+                      }
+                    </ion-button>
+                  </ion-col>
+                  <ion-col size="2" class="ion-text-center">
+                    <ion-button (click)="skipNext()" color="light">
+                      <ion-icon slot="icon-only" name="play-skip-forward" class="small-icon"></ion-icon>
+                    </ion-button>
+                  </ion-col>
+                  <ion-col size="3" class="ion-text-center">
+                    <ion-button (click)="volUp()" color="light">
+                      <ion-icon slot="icon-only" name="volume-high-outline" class="small-icon"></ion-icon>
+                    </ion-button>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </div>
+          }
         </ion-col>
       }
       
@@ -195,69 +248,6 @@
                 </ion-col>
               </ion-row>
             }
-          </ion-grid>
-        </ion-col>
-      }
-      
-      <!-- Controls für Video (unterhalb des Videos) -->
-      @if (isVideoMode) {
-        <ion-col size="12">
-          <ion-grid class="controls video-controls">
-            <ion-row class="slider-row">
-              <ion-range #range [(ngModel)]="progress" max="100" (touchend)="seek()" (mouseup)="seek()"></ion-range>
-            </ion-row>
-            <ion-row class="time-display">
-              <ion-col size="6" class="ion-text-start">
-                <span class="time-label">{{formatTime(currentVideoTime)}}</span>
-              </ion-col>
-              <ion-col size="6" class="ion-text-end">
-                <span class="time-label">{{formatTime(videoDuration)}}</span>
-              </ion-col>
-            </ion-row>
-            <ion-row class="controls-row">
-              <ion-col size="3" class="ion-text-center">
-                <ion-button (click)="volDown()" color="light">
-                  <ion-icon slot="icon-only" name="volume-low-outline" class="small-icon"></ion-icon>
-                </ion-button>
-              </ion-col>
-              <ion-col size="2" class="ion-text-center">
-                <ion-button (click)="skipPrev()" color="light">
-                  <ion-icon slot="icon-only" name="play-skip-back" class="small-icon"></ion-icon>
-                </ion-button>
-              </ion-col>
-              <ion-col size="2" class="ion-text-center">
-                <ion-button (click)="playPause()" color="light">
-                  @if (playing) {
-                    <ion-icon slot="icon-only" name="pause" class="small-icon"></ion-icon>
-                  }
-                  @if (!playing) {
-                    <ion-icon slot="icon-only" name="play" class="small-icon"></ion-icon>
-                  }
-                </ion-button>
-              </ion-col>
-              <ion-col size="2" class="ion-text-center">
-                <ion-button (click)="skipNext()" color="light">
-                  <ion-icon slot="icon-only" name="play-skip-forward" class="small-icon"></ion-icon>
-                </ion-button>
-              </ion-col>
-              <ion-col size="3" class="ion-text-center">
-                <ion-button (click)="volUp()" color="light">
-                  <ion-icon slot="icon-only" name="volume-high-outline" class="small-icon"></ion-icon>
-                </ion-button>
-              </ion-col>
-            </ion-row>
-            <ion-row class="controls-row">
-              <ion-col size="6" class="ion-text-center">
-                <ion-button (click)="seekBack()" color="light">
-                  <ion-icon slot="icon-only" name="play-back" class="small-icon"></ion-icon>
-                </ion-button>
-              </ion-col>
-              <ion-col size="6" class="ion-text-center">
-                <ion-button (click)="seekForward()" color="light">
-                  <ion-icon slot="icon-only" name="play-forward" class="small-icon"></ion-icon>
-                </ion-button>
-              </ion-col>
-            </ion-row>
           </ion-grid>
         </ion-col>
       }

@@ -79,8 +79,8 @@ ion-back-button {
 
 // Video-spezifische Styles
 .video-container {
-    padding: 20px;
     position: relative;
+    cursor: pointer;
     
     video {
         width: 100%;
@@ -90,14 +90,23 @@ ion-back-button {
         background-color: #000;
         border-radius: 8px;
         display: block;
+        
+        // Native Controls ausblenden
+        &::-webkit-media-controls {
+            display: none !important;
+        }
+        &::-webkit-media-controls-enclosure {
+            display: none !important;
+        }
     }
 
     .fullscreen-toggle {
         position: absolute;
-        top: 30px;
-        right: 30px;
-        z-index: 10;
-        opacity: 0.7;
+        top: 20px;
+        right: 20px;
+        z-index: 12;
+        opacity: 0.9;
+        color: white;
         transition: opacity 0.3s;
 
         &:hover {
@@ -105,28 +114,56 @@ ion-back-button {
         }
 
         ion-icon {
-            font-size: 24px;
+            font-size: 36px;
         }
+    }
+
+    .video-controls-overlay {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0) 100%);
+        z-index: 11;
+        border-radius: 0 0 8px 8px;
+        animation: fadeIn 0.3s ease-in-out;
+        pointer-events: auto;
     }
 }
 
 .video-controls {
-    margin-top: 10px;
-    padding-bottom: 20px;
+    padding: 15px 20px 25px 20px;
+    margin: 0;
+
+    .slider-row {
+        margin-top: 0;
+        padding-left: 0;
+        padding-right: 0;
+
+        ion-range {
+            --bar-height: 6px;
+            --knob-size: 25px;
+            --knob-border-radius: 50%;
+            --bar-border-radius: 20px;
+            --knob-box-shadow: 0px 0px 0px 3px #fff;
+        }
+    }
 
     .time-display {
-        padding: 0 15px;
-        margin-top: 5px;
+        padding: 0;
+        margin-top: 8px;
+        margin-bottom: 5px;
 
         .time-label {
-            font-size: 14px;
-            color: #666;
+            font-size: 16px;
+            color: #fff;
             font-weight: 500;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
     }
     
     .controls-row {
-        margin-top: 10px;
+        margin-top: 8px;
 
         ion-button {
             --padding-start: 20px;
@@ -134,6 +171,15 @@ ion-back-button {
             --padding-top: 15px;
             --padding-bottom: 15px;
         }
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
     }
 }
 
@@ -156,27 +202,13 @@ ion-back-button {
             border-radius: 0;
         }
 
+        .video-controls-overlay {
+            border-radius: 0;
+        }
+
         .fullscreen-toggle {
             top: 10px;
             right: 10px;
-        }
-    }
-
-    .video-controls {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: rgba(0, 0, 0, 0.8);
-        z-index: 100;
-        padding: 10px;
-
-        .slider-row {
-            margin-top: 10px;
-        }
-
-        .time-label {
-            color: #fff;
         }
     }
 }

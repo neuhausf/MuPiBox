@@ -98,6 +98,8 @@ export class PlayerPage implements OnInit {
   isFullscreen = false
   currentVideoTime = 0
   videoDuration = 0
+  showVideoControls = false
+  private videoControlsTimeout: any
   private fullscreenChangeHandler: () => void
 
   constructor(
@@ -256,6 +258,12 @@ export class PlayerPage implements OnInit {
     this.skipNext()
   }
 
+  onVideoLoadedMetadata(event: Event): void {
+    const video = event.target as HTMLVideoElement
+    this.videoDuration = video.duration
+    this.logService.log('[PlayerPage] Video metadata loaded, duration:', this.videoDuration)
+  }
+
   onVideoPlay(): void {
     this.playing = true
     this.logService.log('[PlayerPage] Video play event')
@@ -310,6 +318,23 @@ export class PlayerPage implements OnInit {
     const minutes = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
     return `${minutes}:${secs.toString().padStart(2, '0')}`
+  }
+
+  toggleVideoControls(): void {
+    if (this.isVideoMode) {
+      this.showVideoControls = !this.showVideoControls
+      this.logService.log('[PlayerPage] Video controls toggled:', this.showVideoControls)
+      
+      // Auto-hide nach 5 Sekunden
+      if (this.showVideoControls) {
+        if (this.videoControlsTimeout) {
+          clearTimeout(this.videoControlsTimeout)
+        }
+        this.videoControlsTimeout = setTimeout(() => {
+          this.showVideoControls = false
+        }, 5000)
+      }
+    }
   }
 
   seek() {
