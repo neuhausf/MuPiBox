@@ -21,13 +21,13 @@
         }
     }
 
-    .fullscreen-toggle {
+    .back-button {
         position: absolute;
         top: 20px;
-        right: 20px;
+        left: 20px;
         z-index: 12;
-        opacity: 0.9;
-        color: white;
+        opacity: 0.95;
+        --color: #ffffff;
         transition: opacity 0.3s;
 
         &:hover {
@@ -36,6 +36,28 @@
 
         ion-icon {
             font-size: 36px;
+            color: #ffffff;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+        }
+    }
+
+    .fullscreen-toggle {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 12;
+        opacity: 0.95;
+        --color: #ffffff;
+        transition: opacity 0.3s;
+
+        &:hover {
+            opacity: 1;
+        }
+
+        ion-icon {
+            font-size: 36px;
+            color: #ffffff;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
         }
     }
 

@@ -24,6 +24,7 @@ import {
   volumeLowOutline,
   expandOutline,
   contractOutline,
+  arrowBackOutline,
 } from 'ionicons/icons'
 import type { Media } from '../media'
 import { SpotifyService } from '../spotify.service'
@@ -123,6 +124,7 @@ export class VideoPlayerPage implements OnInit, OnDestroy {
       volumeLowOutline,
       expandOutline,
       contractOutline,
+      arrowBackOutline,
     })
 
     this.fullscreenChangeHandler = () => {
@@ -290,5 +292,9 @@ export class VideoPlayerPage implements OnInit, OnDestroy {
       }
     }
     this.fullscreenToggleEvent.emit()
+  }
+
+  goBack(): void {
+    this.navController.back()
   }
 }

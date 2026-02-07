@@ -16,11 +16,18 @@
         </video>
         
         @if (showControls) {
+          <!-- Back Button -->
+          <ion-button 
+            class="back-button" 
+            (click)="goBack(); $event.stopPropagation()" 
+            fill="clear">
+            <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+          </ion-button>
+          
           <!-- Fullscreen Toggle -->
           <ion-button 
             class="fullscreen-toggle" 
             (click)="toggleFullscreen(); $event.stopPropagation()" 
-            color="light"
             fill="clear">
             <ion-icon slot="icon-only" [name]="isFullscreen ? 'contract-outline' : 'expand-outline'"></ion-icon>
           </ion-button>
