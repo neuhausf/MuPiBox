@@ -160,27 +160,6 @@ app.get('/api/activeresume', (_req, res) => {
 })
 
 app.get('/api/network', (req, res) => {
-  const ip = req.socket.remoteAddress
-  const host = req.hostname
-  const isLocalhost =
-    ip === '127.0.0.1' || ip === '::ffff:127.0.0.1' || ip === '::1' || host.indexOf('localhost') !== -1
-
-  if (isLocalhost) {
-    res.json({
-      onlinestate: 'online',
-      host: 'MuPiBox',
-      ip: '127.0.0.1',
-      mac: 'd8:3a:dd:b3:d1:87',
-      wifi: 'CoolWifiName',
-      wifilink: '55%',
-      wifisignal: '-71 dBm',
-      gateway: '192.168.1.1',
-      dns: '192.168.1.1 1.1.1.1 9.9.9.9',
-      subnet: '255.255.255.0',
-    })
-    return
-  }
-
   if (fs.existsSync(networkFile)) {
     tryReadFile(networkFile)
       .then((data) => {
@@ -192,6 +171,27 @@ app.get('/api/network', (req, res) => {
         res.status(500).send('Internal Server Error')
       })
   } else {
+    const ip = req.socket.remoteAddress
+    const host = req.hostname
+    const isLocalhost =
+      ip === '127.0.0.1' || ip === '::ffff:127.0.0.1' || ip === '::1' || host.indexOf('localhost') !== -1
+
+    if (isLocalhost) {
+      res.json({
+        onlinestate: 'online',
+        host: 'MuPiBox',
+        ip: '127.0.0.1',
+        mac: 'd8:3a:dd:b3:d1:87',
+        wifi: 'CoolWifiName',
+        wifilink: '55%',
+        wifisignal: '-71 dBm',
+        gateway: '192.168.1.1',
+        dns: '192.168.1.1 1.1.1.1 9.9.9.9',
+        subnet: '255.255.255.0',
+      })
+      return
+    }
+
     res.status(404).send(`File Not Found: ${networkFile}`)
   }
 })
