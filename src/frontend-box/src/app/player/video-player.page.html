@@ -1,7 +1,8 @@
 <ion-content class="player-content" [class.fullscreen]="isFullscreen">
-  <ion-grid>
-    <ion-row>
-      <ion-col size="12" class="video-container" (click)="toggleControls()">
+  <div #fullscreenWrapper class="fullscreen-wrapper">
+    <ion-grid>
+      <ion-row>
+        <ion-col size="12" class="video-container" (click)="toggleControls()">
         <video 
           #videoPlayer
           [src]="videoUrl"
@@ -16,21 +17,24 @@
         </video>
         
         @if (showControls) {
-          <!-- Back Button -->
-          <ion-button 
-            class="back-button" 
-            (click)="goBack(); $event.stopPropagation()" 
-            fill="clear">
-            <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
-          </ion-button>
-          
-          <!-- Fullscreen Toggle -->
-          <ion-button 
-            class="fullscreen-toggle" 
-            (click)="toggleFullscreen(); $event.stopPropagation()" 
-            fill="clear">
-            <ion-icon slot="icon-only" [name]="isFullscreen ? 'contract-outline' : 'expand-outline'"></ion-icon>
-          </ion-button>
+          <!-- Top Controls Overlay -->
+          <div class="top-controls-overlay">
+            <!-- Back Button -->
+            <ion-button 
+              class="back-button" 
+              (click)="goBack(); $event.stopPropagation()" 
+              fill="clear">
+              <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+            </ion-button>
+            
+            <!-- Fullscreen Toggle -->
+            <ion-button 
+              class="fullscreen-toggle" 
+              (click)="toggleFullscreen(); $event.stopPropagation()" 
+              fill="clear">
+              <ion-icon slot="icon-only" [name]="isFullscreen ? 'contract-outline' : 'expand-outline'"></ion-icon>
+            </ion-button>
+          </div>
           
           <!-- Video Controls Overlay -->
           <div class="video-controls-overlay" (click)="$event.stopPropagation()">
@@ -84,4 +88,5 @@
       </ion-col>
     </ion-row>
   </ion-grid>
+  </div>
 </ion-content>

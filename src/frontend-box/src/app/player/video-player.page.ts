@@ -62,6 +62,7 @@ interface VideoPlayerEvents {
   ],
 })
 export class VideoPlayerPage implements OnInit, OnDestroy {
+  @ViewChild('fullscreenWrapper', { static: false }) fullscreenWrapper: ElementRef<HTMLElement>
   @ViewChild('videoPlayer', { static: false }) videoPlayer: ElementRef<HTMLVideoElement>
   @ViewChild('range', { static: false }) range: IonRange
 
@@ -266,18 +267,18 @@ export class VideoPlayerPage implements OnInit, OnDestroy {
   }
 
   toggleFullscreen(): void {
-    if (this.videoPlayer?.nativeElement) {
-      const video = this.videoPlayer.nativeElement
+    const targetElement = this.fullscreenWrapper?.nativeElement
 
+    if (targetElement) {
       if (!document.fullscreenElement) {
-        if (video.requestFullscreen) {
-          video.requestFullscreen()
-        } else if ((video as any).webkitRequestFullscreen) {
-          (video as any).webkitRequestFullscreen()
-        } else if ((video as any).mozRequestFullScreen) {
-          (video as any).mozRequestFullScreen()
-        } else if ((video as any).msRequestFullscreen) {
-          (video as any).msRequestFullscreen()
+        if (targetElement.requestFullscreen) {
+          targetElement.requestFullscreen()
+        } else if ((targetElement as any).webkitRequestFullscreen) {
+          (targetElement as any).webkitRequestFullscreen()
+        } else if ((targetElement as any).mozRequestFullScreen) {
+          (targetElement as any).mozRequestFullScreen()
+        } else if ((targetElement as any).msRequestFullscreen) {
+          (targetElement as any).msRequestFullscreen()
         }
       } else {
         if (document.exitFullscreen) {
