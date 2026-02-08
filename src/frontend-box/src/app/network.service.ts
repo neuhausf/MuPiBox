@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http'
 import { Injectable } from '@angular/core'
-import { Observable, timer } from 'rxjs'
-import { distinctUntilChanged, filter, map, shareReplay, switchMap } from 'rxjs/operators'
+import { Observable, defer, timer } from 'rxjs'
+import { distinctUntilChanged, expand, filter, map, shareReplay, switchMap } from 'rxjs/operators'
 import { environment } from '../environments/environment'
 import type { Network } from './network'
 
@@ -10,16 +10,28 @@ import type { Network } from './network'
 })
 export class NetworkService {
   /**
-   * Network state observable that polls every 5 seconds.
-   * First request is after 300ms to allow app initialization.
+   * Network state observable with adaptive polling:
+   * - Polls every 1 second when offline
+   * - Polls every 5 seconds when online
+   * - First request is after 300ms to allow app initialization
    */
   public readonly network$: Observable<Network>
 
   constructor(private http: HttpClient) {
-    this.network$ = timer(300, 5000).pipe(
-      switchMap((): Observable<Network> => this.http.get<Network>(`${environment.backend.apiUrl}/network`)),
-      shareReplay({ bufferSize: 1, refCount: false }),
-    )
+    const fetchNetwork = (): Observable<Network> =>
+      this.http.get<Network>(`${environment.backend.apiUrl}/network`)
+
+    this.network$ = defer(() => {
+      // Initial request after 300ms
+      return timer(300).pipe(
+        switchMap(() => fetchNetwork()),
+        expand((network) => {
+          // Poll every 1s when offline, every 5s when online
+          const interval = network.onlinestate === 'online' ? 5000 : 1000
+          return timer(interval).pipe(switchMap(() => fetchNetwork()))
+        }),
+      )
+    }).pipe(shareReplay({ bufferSize: 1, refCount: false }))
   }
 
   /**
