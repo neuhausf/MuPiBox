@@ -14,6 +14,7 @@ TRUESTATE="online"
 FALSESTATE="offline"
 DATA_LOCK="/tmp/.data.lock"
 RESUME_LOCK="/tmp/.resume.lock"
+SLEEP_INTERVAL=1
 
 if [ ! -f ${DATA_FILE} ]; then
 	if [ -f "${DATA_LOCK}" ]; then
@@ -52,8 +53,12 @@ fi
 
 while true
 do
-	if ( $(/usr/bin/python3 /usr/local/bin/mupibox/check_network.py) == ${TRUESTATE} ); then
+	# Direct network check without Python - faster
+	# Uses Google Connectivity Check endpoint (minimal traffic, HTTP 204 response)
+	# 3 retries with 1 second delay, 2 second timeout per attempt
+	if curl -s --max-time 2 --retry 10 --retry-delay 1 http://connectivitycheck.gstatic.com/generate_204 > /dev/null 2>&1; then
 		ONLINESTATE=${TRUESTATE}
+		SLEEP_INTERVAL=10
 		if [ "${ONLINESTATE}" != "${OLDSTATE}" ]; then
 			if [ ! -f ${ACTIVE_FILE} ]; then
 				ln -s ${DATA_FILE} ${ACTIVE_FILE}
@@ -74,6 +79,7 @@ do
 		fi
 	else
 		ONLINESTATE=${FALSESTATE}
+		SLEEP_INTERVAL=1
 		if [ ! -f ${OFFLINE_FILE} ]; then
 			echo -n "[" > ${OFFLINE_FILE}
 			echo -n $(jq '.[] | select(.type != "spotify") | select(.type != "radio" | select(.type != "rss")' < ${DATA_FILE}) >> ${OFFLINE_FILE}
@@ -144,5 +150,6 @@ do
 	fi
 	OLDSTATE=${ONLINESTATE}
 	
-	sleep 10
+	# Dynamic sleep: 1s when offline (fast reconnect detection), 10s when online (lower load)
+	sleep ${SLEEP_INTERVAL}
 done
